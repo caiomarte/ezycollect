@@ -1,0 +1,143 @@
+image: node:14.17
+
+definitions:
+  caches:
+    awscli: build/aws
+    yarn: ~/.yarn/berry/cache
+
+  steps:
+    - step: &validate
+        name: Validate
+        oidc: true
+        caches:
+          - node
+          - yarn
+          - awscli
+
+        script:
+          - . .bitbucket/yarn-install.sh
+
+          - yarn build
+          - yarn format:check
+          - yarn lint
+          - yarn test
+
+    - step: &infra
+        name: Deploy infra
+        condition:
+          changesets:
+            includePaths:
+              - "bitbucket-pipelines.yml"
+              - ".bitbucket/**"
+              - "libs/**"
+              - "apps/ks-infra/**"
+        oidc: true
+        caches:
+          - node
+          - awscli
+
+        script:
+          - . .bitbucket/yarn-install.sh
+
+          - export PATH=$PATH:$(pwd)/build/aws/dist
+          - export AWS_ROLE_ARN=arn:aws:iam::$AWS_ACCOUNT:role/bitbucket-pipelines
+          - export AWS_WEB_IDENTITY_TOKEN_FILE=$(pwd)/web-identity-token
+          - echo $BITBUCKET_STEP_OIDC_TOKEN > $(pwd)/web-identity-token
+          - aws sts get-caller-identity
+
+          - yarn install
+          - yarn build
+          
+          - yarn workspace @kibsi/ks-infra deploy --stage $ENV
+
+    - step: &saas
+        name: Deploy SAAS
+        oidc: true
+        caches:
+          - node
+          - awscli
+
+        script:
+          - . .bitbucket/yarn-install.sh
+
+          - export PATH=$PATH:$(pwd)/build/aws/dist
+          - export AWS_ROLE_ARN=arn:aws:iam::$AWS_ACCOUNT:role/bitbucket-pipelines
+          - export AWS_WEB_IDENTITY_TOKEN_FILE=$(pwd)/web-identity-token
+          - echo $BITBUCKET_STEP_OIDC_TOKEN > $(pwd)/web-identity-token
+          - aws sts get-caller-identity
+
+          - yarn install
+          - yarn build
+
+          - yarn workspace @kibsi/ks-application deploy --stage $ENV
+          - yarn workspace @kibsi/ks-auth deploy --stage $ENV
+          - yarn workspace @kibsi/ks-camera deploy --stage $ENV
+          - yarn workspace @kibsi/ks-crud-template deploy --stage $ENV
+          - yarn workspace @kibsi/ks-deployment deploy --stage $ENV
+          - yarn workspace @kibsi/ks-realtime-data deploy --stage $ENV
+          - yarn workspace @kibsi/ks-tenant deploy --stage $ENV
+          - yarn workspace @kibsi/storybook deploy --stage $ENV
+          - yarn workspace @kibsi/webapp deploy --stage $ENV
+          - yarn workspace @kibsi/webapp-e2e deploy --stage $ENV
+
+    - step: &promote
+        name: Promote
+        oidc: true
+
+        script:
+          - git tag -f env/$ENV
+          - git push -f origin master --tags
+
+
+pipelines:
+  pull-requests:
+    '**':
+      - step: *validate
+
+  branches:
+    'master':
+      - step: *validate
+      - step:
+          <<: *infra
+          name: Deploy infra to Dev
+          deployment: Dev
+      - step:
+          <<: *saas
+          name: Deploy SAAS to Dev
+          deployment: Dev
+
+  custom:
+    latest:
+      - step:
+          <<: *promote
+          name: Promote to Latest
+          deployment: Latest
+
+  tags:
+    'env/latest':
+      - step: *validate
+      - step:
+          <<: *infra
+          name: Deploy infra to Latest
+          deployment: Latest
+      - step:
+          <<: *saas
+          name: Deploy SAAS to Latest
+          deployment: Latest
+      - step:
+          <<: *promote
+          name: Promote to QA
+          deployment: QA
+          trigger: manual
+    'env/qa':
+      - step: *validate
+      - step:
+          <<: *infra
+          name: Deploy infra to QA
+          deployment: QA
+      - step:
+          <<: *saas
+          name: Deploy SAAS to QA
+          deployment: QA
+    # env/stage
+    # env/prod
