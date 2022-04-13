@@ -1,6 +1,7 @@
 variable "queue_name" {
   description = "(Optional) Name of the queue. Must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long."
   type        = string
+  default = ""
 
   validation {
     condition     = can(regex("^[a-zA-Z]{1}[a-zA-Z0-9_-]{0,79}$", var.queue_name))
