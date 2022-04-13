@@ -1,5 +1,5 @@
 variable "queue_name" {
-  description = "Name of the queue. Must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long."
+  description = "(Optional) Name of the queue. Must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long."
   type        = string
 
   validation {
@@ -19,13 +19,13 @@ variable "message_visibility_timeout" {
   }
 }
 
-variable "message_retention_periond" {
+variable "message_retention_period" {
   description = "Amount of time the queue retains messages for, specified in seconds. Must range from 60 (1 minute) to 1209600 (14 days). Defaults to 345600 (4 days)."
   type        = number
   default     = 345600
 
   validation {
-    condition     = var.message_retention_periond >= 60 && var.message_retention_periond <= 1209600
+    condition     = var.message_retention_period >= 60 && var.message_retention_period <= 1209600
     error_message = "Invalid. Must range from 60 to 1209600 seconds."
   }
 }
@@ -63,32 +63,109 @@ variable "message_long_polling" {
   }
 }
 
-variable "permissions" {
-  description = "List of permission type and entities to grant it to. Type must be either 'send', 'receive', or 'manage'. Defaults to [{type='' users=[] roles=[] accounts=[] cidrs=[]}]."
-  type = list(object({
-    type     = string
+variable "permissions_send" {
+  description = "(Optional) List of IAM Users, IAM Roles, and AWS Accounts that can send messages to the queue."
+  type = object({
     users    = list(string)
     roles    = list(string)
     accounts = list(string)
     cidrs    = list(string)
-  }))
+  })
 
-  default = [
-    {
-      type     = ""
-      users    = []
-      roles    = []
-      accounts = []
-      cidrs    = []
-    }
-  ]
+  default = {
+    users    = []
+    roles    = []
+    accounts = []
+    cidrs    = []
+  }
+}
+
+variable "permissions_retrieve" {
+  description = "(Optional) List of IAM Users, IAM Roles, and AWS Accounts that can retrieve messages from the queue."
+  type = object({
+    users    = list(string)
+    roles    = list(string)
+    accounts = list(string)
+    cidrs    = list(string)
+  })
+
+  default = {
+    users    = []
+    roles    = []
+    accounts = []
+    cidrs    = []
+  }
+}
+
+variable "permissions_manage" {
+  description = "(Optional) List of IAM Users, IAM Roles, and AWS Accounts that can manage the queue. The queue creator receives these permissions by default."
+  type = object({
+    users    = list(string)
+    roles    = list(string)
+    accounts = list(string)
+    cidrs    = list(string)
+  })
+
+  default = {
+    users    = []
+    roles    = []
+    accounts = []
+    cidrs    = []
+  }
+}
+
+variable "fifo_queue" {
+  description = "Whether to create a FIFO queue and enable content-based deduplication, and the level throughput quota applies to. content_based_deduplication and throughput_limit are only set if enabled = true. throughput_limit must be either 'perQueue' or 'perMessageGroupId'. Defaults to {enabled=false content_based_deduplication=false}."
+  type = object({
+    enabled                     = bool
+    content_based_deduplication = bool
+    throughput_limit            = string
+  })
+
+  default = {
+    enabled                     = false
+    content_based_deduplication = true
+    throughput_limit            = "perQueue"
+  }
 
   validation {
-    condition = can([for permission in var.permissions : contains([
-      "send",
-      "receive",
-      "manage"
-    ], permission["type"])])
-    error_message = "Invalid. Type must be either 'send', 'receive', or 'manage'."
+    condition = contains([
+      "perQueue",
+      "perMessageGroupId"
+    ], var.fifo_queue.throughput_limit)
+    error_message = "Invalid. throughput_limit must be either 'perQueue' or 'perMessageGroupId'."
+  }
+}
+
+variable "message_encryption" {
+  description = "Whether to enable server-side encryption for messages in the queue, the key to be used, and the amount of time the key can be cached by the queue. If no key_id is provided, a new one is automatically created. key_cache_period must range from 60 (1 minute) to 86,400 (24 hours) seconds. Defaults to {enabled=true key_id='' key_cache_period=300}."
+  type = object({
+    enabled          = bool
+    key_id           = string
+    key_cache_period = number
+  })
+  default = {
+    enabled          = true
+    key_id           = ""
+    key_cache_period = 300
+  }
+
+  validation {
+    condition     = var.message_encryption.key_cache_period >= 60 && var.message_encryption.key_cache_period <= 86400
+    error_message = "Invalid. key_cache_period must range from 60 (1 minute) to 86,400 (24 hours) seconds."
+  }
+}
+
+variable "message_deduplication" {
+  description = "Specifies the level in which message deduplication occurs in the queue. Must be either 'messageGroup' or 'queue'. Defaults to 'queue'."
+  type        = string
+  default     = "queue"
+
+  validation {
+    condition = contains([
+      "messageGroup",
+      "queue"
+    ], var.message_deduplication)
+    error_message = "Invalid. Must be either 'messageGroup' or 'queue'."
   }
 }
