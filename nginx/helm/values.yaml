@@ -5,5 +5,4 @@ namespace: nginx-namespace
 replicas: 3
 port: 80
 domain: "example.com"
-manager: "terraform"
 author: "caio-martinho"
