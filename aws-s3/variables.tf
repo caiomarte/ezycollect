@@ -1,5 +1,5 @@
 variable "bucket_name" {
-    description = "(Optional) Name of the bucket. Must be universally unique; contain only lowercase letters, numbers, dots, and hyphens; begin and end with a letter or number; and range from 3 to 63 characters in length. Check other naming rules https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html."
+    description = "(Optional) The name of the bucket. Must be universally unique; contain only lowercase letters, numbers, dots, and hyphens; begin and end with a letter or number; and range from 3 to 63 characters in length. Check other naming rules- https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html."
     type = string
     default = ""
     

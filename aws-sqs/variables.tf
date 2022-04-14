@@ -1,5 +1,5 @@
 variable "queue_name" {
-  description = "(Optional) Name of the queue. Must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long."
+  description = "(Optional) The name of the queue. Must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long."
   type        = string
   default = ""
 
@@ -10,7 +10,7 @@ variable "queue_name" {
 }
 
 variable "message_visibility_timeout" {
-  description = "Amount of time messages in the queue are visible for, specified in seconds. Must range from 0 to 43200 (12 hours). Defaults to 30."
+  description = "The amount of time messages in the queue are visible for, specified in seconds. Must range from 0 to 43200 (12 hours). Defaults to 30."
   type        = number
   default     = 30
 
@@ -21,7 +21,7 @@ variable "message_visibility_timeout" {
 }
 
 variable "message_retention_period" {
-  description = "Amount of time the queue retains messages for, specified in seconds. Must range from 60 (1 minute) to 1209600 (14 days). Defaults to 345600 (4 days)."
+  description = "The amount of time the queue retains messages for, specified in seconds. Must range from 60 (1 minute) to 1209600 (14 days). Defaults to 345600 (4 days)."
   type        = number
   default     = 345600
 
@@ -32,7 +32,7 @@ variable "message_retention_period" {
 }
 
 variable "message_size_max" {
-  description = "Size limit for messages accepted by the queue, specified in bytes. Must range from 1024 (1 KiB) to 262144 (256 KiB). Defaults to 262144 (256 KiB)."
+  description = "The size limit for messages accepted by the queue, specified in bytes. Must range from 1024 (1 KiB) to 262144 (256 KiB). Defaults to 262144 (256 KiB)."
   type        = number
   default     = 262144
 
@@ -43,7 +43,7 @@ variable "message_size_max" {
 }
 
 variable "message_delay" {
-  description = "Amount of time to delay messages in the queue for, specified in seconds. Must range from 0 to 900 (15 minutes). Defaults to 0."
+  description = "The amount of time to delay messages in the queue for, specified in seconds. Must range from 0 to 900 (15 minutes). Defaults to 0."
   type        = number
   default     = 0
 
@@ -54,7 +54,7 @@ variable "message_delay" {
 }
 
 variable "message_long_polling" {
-  description = "Amount of time to wait before returning ReceiveMessage calls, specified in seconds. Must range from 0 to 20. Defaults to 0."
+  description = "The amount of time to wait before returning ReceiveMessage calls, specified in seconds. Must range from 0 to 20. Defaults to 0."
   type        = number
   default     = 0
 
@@ -65,53 +65,47 @@ variable "message_long_polling" {
 }
 
 variable "permissions_send" {
-  description = "(Optional) List of IAM Users, IAM Roles, and AWS Accounts that can send messages to the queue."
+  description = "(Optional) Lists of IAM Users, IAM Roles, and AWS Accounts that can send messages to the queue."
   type = object({
     users    = list(string)
     roles    = list(string)
     accounts = list(string)
-    cidrs    = list(string)
   })
 
   default = {
     users    = []
     roles    = []
     accounts = []
-    cidrs    = []
   }
 }
 
 variable "permissions_retrieve" {
-  description = "(Optional) List of IAM Users, IAM Roles, and AWS Accounts that can retrieve messages from the queue."
+  description = "(Optional) Lists of IAM Users, IAM Roles, and AWS Accounts that can retrieve messages from the queue."
   type = object({
     users    = list(string)
     roles    = list(string)
     accounts = list(string)
-    cidrs    = list(string)
   })
 
   default = {
     users    = []
     roles    = []
     accounts = []
-    cidrs    = []
   }
 }
 
 variable "permissions_manage" {
-  description = "(Optional) List of IAM Users, IAM Roles, and AWS Accounts that can manage the queue. The queue creator receives these permissions by default."
+  description = "(Optional) Lists of IAM Users, IAM Roles, and AWS Accounts that can manage the queue. The queue creator receives these permissions by default."
   type = object({
     users    = list(string)
     roles    = list(string)
     accounts = list(string)
-    cidrs    = list(string)
   })
 
   default = {
     users    = []
     roles    = []
     accounts = []
-    cidrs    = []
   }
 }
 
